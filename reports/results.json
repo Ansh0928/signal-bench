@@ -1,0 +1,4769 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-09-30T02:26:27.268550+00:00",
+  "source_sha256": "adc724d927105c2525009a17ac33db501a39e64e29852711b4d2c961fdacd392",
+  "binary_sha256": "11a22c1f05bf72aa38a47a5749c851c23b7a673f05a0914d871c6e7453732e48",
+  "environment": "Native C++17 subprocess; stdin/stdout transport; deterministic virtual clock",
+  "scope": "Educational simulation. No physical hardware or medical-device integration tested.",
+  "verification_passed": true,
+  "scenario_count": 18,
+  "assertion_count": 250,
+  "expected_flawed_failures": [
+    "conflict",
+    "handshake",
+    "lost_ack",
+    "old_session"
+  ],
+  "results": [
+    {
+      "id": "normal",
+      "title": "Normal communication",
+      "description": "Establish a session, apply a command, and receive telemetry.",
+      "requirement": "R1",
+      "mode": "flawed",
+      "passed": true,
+      "error": null,
+      "checks": [
+        {
+          "event": 0,
+          "field": "outcome",
+          "expected": "session_opened",
+          "actual": "session_opened",
+          "passed": true
+        },
+        {
+          "event": 1,
+          "field": "outcome",
+          "expected": "applied",
+          "actual": "applied",
+          "passed": true
+        },
+        {
+          "event": 1,
+          "field": "device_level",
+          "expected": 35,
+          "actual": 35,
+          "passed": true
+        },
+        {
+          "event": 1,
+          "field": "executions",
+          "expected": "1",
+          "actual": "1",
+          "passed": true
+        },
+        {
+          "event": 2,
+          "field": "outcome",
+          "expected": "sample_accepted",
+          "actual": "sample_accepted",
+          "passed": true
+        },
+        {
+          "event": 2,
+          "field": "observed_level",
+          "expected": 35,
+          "actual": 35,
+          "passed": true
+        },
+        {
+          "event": 2,
+          "field": "freshness",
+          "expected": "fresh",
+          "actual": "fresh",
+          "passed": true
+        }
+      ],
+      "events": [
+        {
+          "frame": "HELLO 1",
+          "note": "",
+          "response": {
+            "outcome": "session_opened",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "0",
+            "device_level": 0,
+            "executions": "0",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "SET 1 1 35",
+          "note": "",
+          "response": {
+            "outcome": "applied",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "1",
+            "device_level": 35,
+            "executions": "1",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "SAMPLE 1 1 35",
+          "note": "",
+          "response": {
+            "outcome": "sample_accepted",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "1",
+            "device_level": 35,
+            "executions": "1",
+            "freshness": "fresh",
+            "observed_level": 35
+          },
+          "delivery": "delivered"
+        }
+      ]
+    },
+    {
+      "id": "lost_ack",
+      "title": "Lost acknowledgement",
+      "description": "A missing reply must not cause duplicate execution.",
+      "requirement": "R2",
+      "mode": "flawed",
+      "passed": false,
+      "error": null,
+      "checks": [
+        {
+          "event": 2,
+          "field": "outcome",
+          "expected": "duplicate",
+          "actual": "applied",
+          "passed": false
+        },
+        {
+          "event": 2,
+          "field": "executions",
+          "expected": "1",
+          "actual": "2",
+          "passed": false
+        },
+        {
+          "event": 2,
+          "field": "device_level",
+          "expected": 35,
+          "actual": 35,
+          "passed": true
+        }
+      ],
+      "events": [
+        {
+          "frame": "HELLO 1",
+          "note": "",
+          "response": {
+            "outcome": "session_opened",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "0",
+            "device_level": 0,
+            "executions": "0",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "SET 1 1 35",
+          "note": "The controller executes; the simulated link discards its acknowledgement.",
+          "response": {
+            "outcome": "applied",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "1",
+            "device_level": 35,
+            "executions": "1",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "reply_dropped"
+        },
+        {
+          "frame": "SET 1 1 35",
+          "note": "Sender retries the same command ID after receiving no acknowledgement.",
+          "response": {
+            "outcome": "applied",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "1",
+            "device_level": 35,
+            "executions": "2",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        }
+      ]
+    },
+    {
+      "id": "old_session",
+      "title": "Delayed command after reconnect",
+      "description": "Reject commands belonging to an earlier session.",
+      "requirement": "R3",
+      "mode": "flawed",
+      "passed": false,
+      "error": null,
+      "checks": [
+        {
+          "event": 2,
+          "field": "device_level",
+          "expected": 20,
+          "actual": 20,
+          "passed": true
+        },
+        {
+          "event": 3,
+          "field": "outcome",
+          "expected": "wrong_session",
+          "actual": "applied",
+          "passed": false
+        },
+        {
+          "event": 3,
+          "field": "device_level",
+          "expected": 20,
+          "actual": 80,
+          "passed": false
+        },
+        {
+          "event": 3,
+          "field": "executions",
+          "expected": "1",
+          "actual": "2",
+          "passed": false
+        }
+      ],
+      "events": [
+        {
+          "frame": "HELLO 1",
+          "note": "",
+          "response": {
+            "outcome": "session_opened",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "0",
+            "device_level": 0,
+            "executions": "0",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "SET 1 1 20",
+          "note": "",
+          "response": {
+            "outcome": "applied",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "1",
+            "device_level": 20,
+            "executions": "1",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "HELLO 2",
+          "note": "Reconnect with a new session; device output is retained.",
+          "response": {
+            "outcome": "session_opened",
+            "time_ms": "0",
+            "session": "2",
+            "last_id": "0",
+            "device_level": 20,
+            "executions": "1",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "SET 1 2 80",
+          "note": "A delayed command from the previous connection arrives.",
+          "response": {
+            "outcome": "applied",
+            "time_ms": "0",
+            "session": "2",
+            "last_id": "2",
+            "device_level": 80,
+            "executions": "2",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        }
+      ]
+    },
+    {
+      "id": "reordered",
+      "title": "Out-of-order commands",
+      "description": "An older command must not overwrite a newer one.",
+      "requirement": "R4",
+      "mode": "flawed",
+      "passed": true,
+      "error": null,
+      "checks": [
+        {
+          "event": 1,
+          "field": "outcome",
+          "expected": "applied",
+          "actual": "applied",
+          "passed": true
+        },
+        {
+          "event": 2,
+          "field": "outcome",
+          "expected": "old_command",
+          "actual": "old_command",
+          "passed": true
+        },
+        {
+          "event": 2,
+          "field": "device_level",
+          "expected": 60,
+          "actual": 60,
+          "passed": true
+        },
+        {
+          "event": 2,
+          "field": "executions",
+          "expected": "1",
+          "actual": "1",
+          "passed": true
+        }
+      ],
+      "events": [
+        {
+          "frame": "HELLO 1",
+          "note": "",
+          "response": {
+            "outcome": "session_opened",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "0",
+            "device_level": 0,
+            "executions": "0",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "SET 1 2 60",
+          "note": "",
+          "response": {
+            "outcome": "applied",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "2",
+            "device_level": 60,
+            "executions": "1",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "SET 1 1 10",
+          "note": "An earlier command arrives after a newer command.",
+          "response": {
+            "outcome": "old_command",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "2",
+            "device_level": 60,
+            "executions": "1",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        }
+      ]
+    },
+    {
+      "id": "conflict",
+      "title": "Command ID conflict",
+      "description": "Reject a changed payload reusing the latest command ID.",
+      "requirement": "R2",
+      "mode": "flawed",
+      "passed": false,
+      "error": null,
+      "checks": [
+        {
+          "event": 2,
+          "field": "outcome",
+          "expected": "id_conflict",
+          "actual": "applied",
+          "passed": false
+        },
+        {
+          "event": 2,
+          "field": "device_level",
+          "expected": 20,
+          "actual": 90,
+          "passed": false
+        },
+        {
+          "event": 2,
+          "field": "executions",
+          "expected": "1",
+          "actual": "2",
+          "passed": false
+        }
+      ],
+      "events": [
+        {
+          "frame": "HELLO 1",
+          "note": "",
+          "response": {
+            "outcome": "session_opened",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "0",
+            "device_level": 0,
+            "executions": "0",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "SET 1 1 20",
+          "note": "",
+          "response": {
+            "outcome": "applied",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "1",
+            "device_level": 20,
+            "executions": "1",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "SET 1 1 90",
+          "note": "The same ID must never identify two different payloads.",
+          "response": {
+            "outcome": "applied",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "1",
+            "device_level": 90,
+            "executions": "2",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        }
+      ]
+    },
+    {
+      "id": "stale",
+      "title": "Telemetry freshness boundary",
+      "description": "Mark readings stale at exactly 1,000 ms without a new sample.",
+      "requirement": "R5",
+      "mode": "flawed",
+      "passed": true,
+      "error": null,
+      "checks": [
+        {
+          "event": 2,
+          "field": "freshness",
+          "expected": "fresh",
+          "actual": "fresh",
+          "passed": true
+        },
+        {
+          "event": 3,
+          "field": "freshness",
+          "expected": "stale",
+          "actual": "stale",
+          "passed": true
+        },
+        {
+          "event": 3,
+          "field": "observed_level",
+          "expected": 25,
+          "actual": 25,
+          "passed": true
+        }
+      ],
+      "events": [
+        {
+          "frame": "HELLO 1",
+          "note": "",
+          "response": {
+            "outcome": "session_opened",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "0",
+            "device_level": 0,
+            "executions": "0",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "SAMPLE 1 1 25",
+          "note": "",
+          "response": {
+            "outcome": "sample_accepted",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "0",
+            "device_level": 0,
+            "executions": "0",
+            "freshness": "fresh",
+            "observed_level": 25
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "CLOCK 999",
+          "note": "Advance virtual time, without delivering telemetry.",
+          "response": {
+            "outcome": "clock_advanced",
+            "time_ms": "999",
+            "session": "1",
+            "last_id": "0",
+            "device_level": 0,
+            "executions": "0",
+            "freshness": "fresh",
+            "observed_level": 25
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "CLOCK 1000",
+          "note": "The 1,000 ms limit is an educational requirement.",
+          "response": {
+            "outcome": "clock_advanced",
+            "time_ms": "1000",
+            "session": "1",
+            "last_id": "0",
+            "device_level": 0,
+            "executions": "0",
+            "freshness": "stale",
+            "observed_level": 25
+          },
+          "delivery": "delivered"
+        }
+      ]
+    },
+    {
+      "id": "recovery",
+      "title": "Telemetry recovery and reordering",
+      "description": "Recover on fresh telemetry without accepting delayed old samples.",
+      "requirement": "R5",
+      "mode": "flawed",
+      "passed": true,
+      "error": null,
+      "checks": [
+        {
+          "event": 2,
+          "field": "freshness",
+          "expected": "stale",
+          "actual": "stale",
+          "passed": true
+        },
+        {
+          "event": 3,
+          "field": "freshness",
+          "expected": "fresh",
+          "actual": "fresh",
+          "passed": true
+        },
+        {
+          "event": 3,
+          "field": "observed_level",
+          "expected": 30,
+          "actual": 30,
+          "passed": true
+        },
+        {
+          "event": 5,
+          "field": "outcome",
+          "expected": "old_sample",
+          "actual": "old_sample",
+          "passed": true
+        },
+        {
+          "event": 5,
+          "field": "observed_level",
+          "expected": 30,
+          "actual": 30,
+          "passed": true
+        },
+        {
+          "event": 6,
+          "field": "freshness",
+          "expected": "stale",
+          "actual": "stale",
+          "passed": true
+        }
+      ],
+      "events": [
+        {
+          "frame": "HELLO 1",
+          "note": "",
+          "response": {
+            "outcome": "session_opened",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "0",
+            "device_level": 0,
+            "executions": "0",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "SAMPLE 1 1 20",
+          "note": "",
+          "response": {
+            "outcome": "sample_accepted",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "0",
+            "device_level": 0,
+            "executions": "0",
+            "freshness": "fresh",
+            "observed_level": 20
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "CLOCK 1200",
+          "note": "",
+          "response": {
+            "outcome": "clock_advanced",
+            "time_ms": "1200",
+            "session": "1",
+            "last_id": "0",
+            "device_level": 0,
+            "executions": "0",
+            "freshness": "stale",
+            "observed_level": 20
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "SAMPLE 1 2 30",
+          "note": "A newer sample restores freshness.",
+          "response": {
+            "outcome": "sample_accepted",
+            "time_ms": "1200",
+            "session": "1",
+            "last_id": "0",
+            "device_level": 0,
+            "executions": "0",
+            "freshness": "fresh",
+            "observed_level": 30
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "CLOCK 1500",
+          "note": "",
+          "response": {
+            "outcome": "clock_advanced",
+            "time_ms": "1500",
+            "session": "1",
+            "last_id": "0",
+            "device_level": 0,
+            "executions": "0",
+            "freshness": "fresh",
+            "observed_level": 30
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "SAMPLE 1 1 20",
+          "note": "Delayed telemetry cannot replace the latest sample.",
+          "response": {
+            "outcome": "old_sample",
+            "time_ms": "1500",
+            "session": "1",
+            "last_id": "0",
+            "device_level": 0,
+            "executions": "0",
+            "freshness": "fresh",
+            "observed_level": 30
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "CLOCK 2200",
+          "note": "Rejected telemetry must not refresh the freshness timer.",
+          "response": {
+            "outcome": "clock_advanced",
+            "time_ms": "2200",
+            "session": "1",
+            "last_id": "0",
+            "device_level": 0,
+            "executions": "0",
+            "freshness": "stale",
+            "observed_level": 30
+          },
+          "delivery": "delivered"
+        }
+      ]
+    },
+    {
+      "id": "lost_request",
+      "title": "Lost command",
+      "description": "Dropping a request leaves the device unchanged; a retry can succeed.",
+      "requirement": "R1",
+      "mode": "flawed",
+      "passed": true,
+      "error": null,
+      "checks": [
+        {
+          "event": 2,
+          "field": "device_level",
+          "expected": 0,
+          "actual": 0,
+          "passed": true
+        },
+        {
+          "event": 2,
+          "field": "executions",
+          "expected": "0",
+          "actual": "0",
+          "passed": true
+        },
+        {
+          "event": 3,
+          "field": "outcome",
+          "expected": "applied",
+          "actual": "applied",
+          "passed": true
+        },
+        {
+          "event": 3,
+          "field": "executions",
+          "expected": "1",
+          "actual": "1",
+          "passed": true
+        },
+        {
+          "event": 3,
+          "field": "device_level",
+          "expected": 75,
+          "actual": 75,
+          "passed": true
+        }
+      ],
+      "events": [
+        {
+          "frame": "HELLO 1",
+          "note": "",
+          "response": {
+            "outcome": "session_opened",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "0",
+            "device_level": 0,
+            "executions": "0",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "SET 1 1 75",
+          "note": "This frame never reaches the C++ subprocess.",
+          "response": null,
+          "delivery": "request_dropped"
+        },
+        {
+          "frame": "STATUS",
+          "note": "",
+          "response": {
+            "outcome": "snapshot",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "0",
+            "device_level": 0,
+            "executions": "0",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "SET 1 1 75",
+          "note": "The sender retries after loss.",
+          "response": {
+            "outcome": "applied",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "1",
+            "device_level": 75,
+            "executions": "1",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        }
+      ]
+    },
+    {
+      "id": "handshake",
+      "title": "Repeated handshake",
+      "description": "A handshake retry must not erase duplicate-command protection.",
+      "requirement": "R2",
+      "mode": "flawed",
+      "passed": false,
+      "error": null,
+      "checks": [
+        {
+          "event": 2,
+          "field": "outcome",
+          "expected": "session_resumed",
+          "actual": "session_resumed",
+          "passed": true
+        },
+        {
+          "event": 2,
+          "field": "last_id",
+          "expected": "1",
+          "actual": "1",
+          "passed": true
+        },
+        {
+          "event": 3,
+          "field": "outcome",
+          "expected": "duplicate",
+          "actual": "applied",
+          "passed": false
+        },
+        {
+          "event": 3,
+          "field": "executions",
+          "expected": "1",
+          "actual": "2",
+          "passed": false
+        }
+      ],
+      "events": [
+        {
+          "frame": "HELLO 1",
+          "note": "",
+          "response": {
+            "outcome": "session_opened",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "0",
+            "device_level": 0,
+            "executions": "0",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "SET 1 1 45",
+          "note": "",
+          "response": {
+            "outcome": "applied",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "1",
+            "device_level": 45,
+            "executions": "1",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "HELLO 1",
+          "note": "A retried handshake must preserve command history.",
+          "response": {
+            "outcome": "session_resumed",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "1",
+            "device_level": 45,
+            "executions": "1",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "SET 1 1 45",
+          "note": "",
+          "response": {
+            "outcome": "applied",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "1",
+            "device_level": 45,
+            "executions": "2",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        }
+      ]
+    },
+    {
+      "id": "malformed",
+      "title": "Malformed and invalid input",
+      "description": "Reject malformed frames and out-of-range values without mutations.",
+      "requirement": "R6",
+      "mode": "flawed",
+      "passed": true,
+      "error": null,
+      "checks": [
+        {
+          "event": 2,
+          "field": "outcome",
+          "expected": "invalid_frame",
+          "actual": "invalid_frame",
+          "passed": true
+        },
+        {
+          "event": 2,
+          "field": "executions",
+          "expected": "1",
+          "actual": "1",
+          "passed": true
+        },
+        {
+          "event": 2,
+          "field": "device_level",
+          "expected": 40,
+          "actual": 40,
+          "passed": true
+        },
+        {
+          "event": 3,
+          "field": "outcome",
+          "expected": "invalid_frame",
+          "actual": "invalid_frame",
+          "passed": true
+        },
+        {
+          "event": 3,
+          "field": "executions",
+          "expected": "1",
+          "actual": "1",
+          "passed": true
+        },
+        {
+          "event": 3,
+          "field": "device_level",
+          "expected": 40,
+          "actual": 40,
+          "passed": true
+        },
+        {
+          "event": 4,
+          "field": "outcome",
+          "expected": "invalid_frame",
+          "actual": "invalid_frame",
+          "passed": true
+        },
+        {
+          "event": 4,
+          "field": "executions",
+          "expected": "1",
+          "actual": "1",
+          "passed": true
+        },
+        {
+          "event": 4,
+          "field": "device_level",
+          "expected": 40,
+          "actual": 40,
+          "passed": true
+        },
+        {
+          "event": 5,
+          "field": "outcome",
+          "expected": "invalid_frame",
+          "actual": "invalid_frame",
+          "passed": true
+        },
+        {
+          "event": 5,
+          "field": "executions",
+          "expected": "1",
+          "actual": "1",
+          "passed": true
+        },
+        {
+          "event": 5,
+          "field": "device_level",
+          "expected": 40,
+          "actual": 40,
+          "passed": true
+        },
+        {
+          "event": 6,
+          "field": "outcome",
+          "expected": "invalid_frame",
+          "actual": "invalid_frame",
+          "passed": true
+        },
+        {
+          "event": 6,
+          "field": "executions",
+          "expected": "1",
+          "actual": "1",
+          "passed": true
+        },
+        {
+          "event": 6,
+          "field": "device_level",
+          "expected": 40,
+          "actual": 40,
+          "passed": true
+        },
+        {
+          "event": 7,
+          "field": "outcome",
+          "expected": "invalid_frame",
+          "actual": "invalid_frame",
+          "passed": true
+        },
+        {
+          "event": 7,
+          "field": "executions",
+          "expected": "1",
+          "actual": "1",
+          "passed": true
+        },
+        {
+          "event": 7,
+          "field": "device_level",
+          "expected": 40,
+          "actual": 40,
+          "passed": true
+        },
+        {
+          "event": 8,
+          "field": "outcome",
+          "expected": "invalid_frame",
+          "actual": "invalid_frame",
+          "passed": true
+        },
+        {
+          "event": 8,
+          "field": "executions",
+          "expected": "1",
+          "actual": "1",
+          "passed": true
+        },
+        {
+          "event": 8,
+          "field": "device_level",
+          "expected": 40,
+          "actual": 40,
+          "passed": true
+        },
+        {
+          "event": 9,
+          "field": "outcome",
+          "expected": "invalid_frame",
+          "actual": "invalid_frame",
+          "passed": true
+        },
+        {
+          "event": 9,
+          "field": "executions",
+          "expected": "1",
+          "actual": "1",
+          "passed": true
+        },
+        {
+          "event": 9,
+          "field": "device_level",
+          "expected": 40,
+          "actual": 40,
+          "passed": true
+        },
+        {
+          "event": 10,
+          "field": "outcome",
+          "expected": "invalid_frame",
+          "actual": "invalid_frame",
+          "passed": true
+        },
+        {
+          "event": 10,
+          "field": "executions",
+          "expected": "1",
+          "actual": "1",
+          "passed": true
+        },
+        {
+          "event": 10,
+          "field": "device_level",
+          "expected": 40,
+          "actual": 40,
+          "passed": true
+        },
+        {
+          "event": 11,
+          "field": "outcome",
+          "expected": "invalid_frame",
+          "actual": "invalid_frame",
+          "passed": true
+        },
+        {
+          "event": 11,
+          "field": "executions",
+          "expected": "1",
+          "actual": "1",
+          "passed": true
+        },
+        {
+          "event": 11,
+          "field": "device_level",
+          "expected": 40,
+          "actual": 40,
+          "passed": true
+        },
+        {
+          "event": 12,
+          "field": "outcome",
+          "expected": "invalid_argument",
+          "actual": "invalid_argument",
+          "passed": true
+        },
+        {
+          "event": 12,
+          "field": "executions",
+          "expected": "1",
+          "actual": "1",
+          "passed": true
+        },
+        {
+          "event": 12,
+          "field": "device_level",
+          "expected": 40,
+          "actual": 40,
+          "passed": true
+        },
+        {
+          "event": 13,
+          "field": "outcome",
+          "expected": "invalid_argument",
+          "actual": "invalid_argument",
+          "passed": true
+        },
+        {
+          "event": 13,
+          "field": "executions",
+          "expected": "1",
+          "actual": "1",
+          "passed": true
+        },
+        {
+          "event": 13,
+          "field": "device_level",
+          "expected": 40,
+          "actual": 40,
+          "passed": true
+        },
+        {
+          "event": 14,
+          "field": "outcome",
+          "expected": "invalid_argument",
+          "actual": "invalid_argument",
+          "passed": true
+        },
+        {
+          "event": 14,
+          "field": "executions",
+          "expected": "1",
+          "actual": "1",
+          "passed": true
+        },
+        {
+          "event": 14,
+          "field": "device_level",
+          "expected": 40,
+          "actual": 40,
+          "passed": true
+        }
+      ],
+      "events": [
+        {
+          "frame": "HELLO 1",
+          "note": "",
+          "response": {
+            "outcome": "session_opened",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "0",
+            "device_level": 0,
+            "executions": "0",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "SET 1 1 40",
+          "note": "",
+          "response": {
+            "outcome": "applied",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "1",
+            "device_level": 40,
+            "executions": "1",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "",
+          "note": "",
+          "response": {
+            "outcome": "invalid_frame",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "1",
+            "device_level": 40,
+            "executions": "1",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "SET 1 2",
+          "note": "",
+          "response": {
+            "outcome": "invalid_frame",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "1",
+            "device_level": 40,
+            "executions": "1",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "SET 1 2 50 extra",
+          "note": "",
+          "response": {
+            "outcome": "invalid_frame",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "1",
+            "device_level": 40,
+            "executions": "1",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "SET -1 2 30",
+          "note": "",
+          "response": {
+            "outcome": "invalid_frame",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "1",
+            "device_level": 40,
+            "executions": "1",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "SET 1 2 NaN",
+          "note": "",
+          "response": {
+            "outcome": "invalid_frame",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "1",
+            "device_level": 40,
+            "executions": "1",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "SET 1 2 1.5",
+          "note": "",
+          "response": {
+            "outcome": "invalid_frame",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "1",
+            "device_level": 40,
+            "executions": "1",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "SET 1 2 +5",
+          "note": "",
+          "response": {
+            "outcome": "invalid_frame",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "1",
+            "device_level": 40,
+            "executions": "1",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "SET 1 18446744073709551616 50",
+          "note": "",
+          "response": {
+            "outcome": "invalid_frame",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "1",
+            "device_level": 40,
+            "executions": "1",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "SET 1 2 50\u0000",
+          "note": "",
+          "response": {
+            "outcome": "invalid_frame",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "1",
+            "device_level": 40,
+            "executions": "1",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "UNKNOWN",
+          "note": "",
+          "response": {
+            "outcome": "invalid_frame",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "1",
+            "device_level": 40,
+            "executions": "1",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "SET 1 2 101",
+          "note": "",
+          "response": {
+            "outcome": "invalid_argument",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "1",
+            "device_level": 40,
+            "executions": "1",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "SET 1 2 18446744073709551615",
+          "note": "",
+          "response": {
+            "outcome": "invalid_argument",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "1",
+            "device_level": 40,
+            "executions": "1",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "SET 1 0 10",
+          "note": "",
+          "response": {
+            "outcome": "invalid_argument",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "1",
+            "device_level": 40,
+            "executions": "1",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        }
+      ]
+    },
+    {
+      "id": "oversized",
+      "title": "Oversized input recovery",
+      "description": "Reject a long frame and correctly parse the next frame.",
+      "requirement": "R6",
+      "mode": "flawed",
+      "passed": true,
+      "error": null,
+      "checks": [
+        {
+          "event": 1,
+          "field": "outcome",
+          "expected": "frame_too_long",
+          "actual": "frame_too_long",
+          "passed": true
+        },
+        {
+          "event": 1,
+          "field": "executions",
+          "expected": "0",
+          "actual": "0",
+          "passed": true
+        },
+        {
+          "event": 2,
+          "field": "outcome",
+          "expected": "applied",
+          "actual": "applied",
+          "passed": true
+        },
+        {
+          "event": 2,
+          "field": "device_level",
+          "expected": 30,
+          "actual": 30,
+          "passed": true
+        }
+      ],
+      "events": [
+        {
+          "frame": "HELLO 1",
+          "note": "",
+          "response": {
+            "outcome": "session_opened",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "0",
+            "device_level": 0,
+            "executions": "0",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\u2026 [truncated for display]",
+          "note": "Consume an oversized frame without losing the next frame boundary.",
+          "response": {
+            "outcome": "frame_too_long",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "0",
+            "device_level": 0,
+            "executions": "0",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "SET 1 1 30",
+          "note": "",
+          "response": {
+            "outcome": "applied",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "1",
+            "device_level": 30,
+            "executions": "1",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        }
+      ]
+    },
+    {
+      "id": "session",
+      "title": "Session establishment",
+      "description": "Require a session and reject zero or decreasing session epochs.",
+      "requirement": "R3",
+      "mode": "flawed",
+      "passed": true,
+      "error": null,
+      "checks": [
+        {
+          "event": 0,
+          "field": "outcome",
+          "expected": "no_session",
+          "actual": "no_session",
+          "passed": true
+        },
+        {
+          "event": 0,
+          "field": "executions",
+          "expected": "0",
+          "actual": "0",
+          "passed": true
+        },
+        {
+          "event": 1,
+          "field": "outcome",
+          "expected": "invalid_session",
+          "actual": "invalid_session",
+          "passed": true
+        },
+        {
+          "event": 1,
+          "field": "session",
+          "expected": "0",
+          "actual": "0",
+          "passed": true
+        },
+        {
+          "event": 2,
+          "field": "outcome",
+          "expected": "session_opened",
+          "actual": "session_opened",
+          "passed": true
+        },
+        {
+          "event": 3,
+          "field": "outcome",
+          "expected": "invalid_session",
+          "actual": "invalid_session",
+          "passed": true
+        },
+        {
+          "event": 3,
+          "field": "session",
+          "expected": "2",
+          "actual": "2",
+          "passed": true
+        }
+      ],
+      "events": [
+        {
+          "frame": "SET 1 1 50",
+          "note": "",
+          "response": {
+            "outcome": "no_session",
+            "time_ms": "0",
+            "session": "0",
+            "last_id": "0",
+            "device_level": 0,
+            "executions": "0",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "HELLO 0",
+          "note": "",
+          "response": {
+            "outcome": "invalid_session",
+            "time_ms": "0",
+            "session": "0",
+            "last_id": "0",
+            "device_level": 0,
+            "executions": "0",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "HELLO 2",
+          "note": "",
+          "response": {
+            "outcome": "session_opened",
+            "time_ms": "0",
+            "session": "2",
+            "last_id": "0",
+            "device_level": 0,
+            "executions": "0",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "HELLO 1",
+          "note": "",
+          "response": {
+            "outcome": "invalid_session",
+            "time_ms": "0",
+            "session": "2",
+            "last_id": "0",
+            "device_level": 0,
+            "executions": "0",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        }
+      ]
+    },
+    {
+      "id": "telemetry_epoch",
+      "title": "Old-session telemetry",
+      "description": "A new connection starts with unknown monitoring state.",
+      "requirement": "R5",
+      "mode": "flawed",
+      "passed": true,
+      "error": null,
+      "checks": [
+        {
+          "event": 2,
+          "field": "freshness",
+          "expected": "unknown",
+          "actual": "unknown",
+          "passed": true
+        },
+        {
+          "event": 2,
+          "field": "observed_level",
+          "expected": null,
+          "actual": null,
+          "passed": true
+        },
+        {
+          "event": 3,
+          "field": "outcome",
+          "expected": "wrong_session",
+          "actual": "wrong_session",
+          "passed": true
+        },
+        {
+          "event": 3,
+          "field": "freshness",
+          "expected": "unknown",
+          "actual": "unknown",
+          "passed": true
+        },
+        {
+          "event": 3,
+          "field": "observed_level",
+          "expected": null,
+          "actual": null,
+          "passed": true
+        },
+        {
+          "event": 4,
+          "field": "outcome",
+          "expected": "sample_accepted",
+          "actual": "sample_accepted",
+          "passed": true
+        },
+        {
+          "event": 4,
+          "field": "freshness",
+          "expected": "fresh",
+          "actual": "fresh",
+          "passed": true
+        }
+      ],
+      "events": [
+        {
+          "frame": "HELLO 1",
+          "note": "",
+          "response": {
+            "outcome": "session_opened",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "0",
+            "device_level": 0,
+            "executions": "0",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "SAMPLE 1 1 20",
+          "note": "",
+          "response": {
+            "outcome": "sample_accepted",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "0",
+            "device_level": 0,
+            "executions": "0",
+            "freshness": "fresh",
+            "observed_level": 20
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "HELLO 2",
+          "note": "",
+          "response": {
+            "outcome": "session_opened",
+            "time_ms": "0",
+            "session": "2",
+            "last_id": "0",
+            "device_level": 0,
+            "executions": "0",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "SAMPLE 1 2 80",
+          "note": "Telemetry from an earlier connection must not appear current.",
+          "response": {
+            "outcome": "wrong_session",
+            "time_ms": "0",
+            "session": "2",
+            "last_id": "0",
+            "device_level": 0,
+            "executions": "0",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "SAMPLE 2 1 20",
+          "note": "",
+          "response": {
+            "outcome": "sample_accepted",
+            "time_ms": "0",
+            "session": "2",
+            "last_id": "0",
+            "device_level": 0,
+            "executions": "0",
+            "freshness": "fresh",
+            "observed_level": 20
+          },
+          "delivery": "delivered"
+        }
+      ]
+    },
+    {
+      "id": "clock",
+      "title": "Monotonic test clock",
+      "description": "The deterministic fixture refuses backward time.",
+      "requirement": "R7",
+      "mode": "flawed",
+      "passed": true,
+      "error": null,
+      "checks": [
+        {
+          "event": 1,
+          "field": "outcome",
+          "expected": "clock_regression",
+          "actual": "clock_regression",
+          "passed": true
+        },
+        {
+          "event": 1,
+          "field": "time_ms",
+          "expected": "500",
+          "actual": "500",
+          "passed": true
+        }
+      ],
+      "events": [
+        {
+          "frame": "CLOCK 500",
+          "note": "",
+          "response": {
+            "outcome": "clock_advanced",
+            "time_ms": "500",
+            "session": "0",
+            "last_id": "0",
+            "device_level": 0,
+            "executions": "0",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "CLOCK 499",
+          "note": "",
+          "response": {
+            "outcome": "clock_regression",
+            "time_ms": "500",
+            "session": "0",
+            "last_id": "0",
+            "device_level": 0,
+            "executions": "0",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        }
+      ]
+    },
+    {
+      "id": "disconnect",
+      "title": "Link silence and reconnection",
+      "description": "A link interruption alone never changes the indicator setting.",
+      "requirement": "R8",
+      "mode": "flawed",
+      "passed": true,
+      "error": null,
+      "checks": [
+        {
+          "event": 3,
+          "field": "device_level",
+          "expected": 40,
+          "actual": 40,
+          "passed": true
+        },
+        {
+          "event": 3,
+          "field": "executions",
+          "expected": "1",
+          "actual": "1",
+          "passed": true
+        },
+        {
+          "event": 3,
+          "field": "freshness",
+          "expected": "stale",
+          "actual": "stale",
+          "passed": true
+        },
+        {
+          "event": 4,
+          "field": "device_level",
+          "expected": 40,
+          "actual": 40,
+          "passed": true
+        },
+        {
+          "event": 4,
+          "field": "executions",
+          "expected": "1",
+          "actual": "1",
+          "passed": true
+        },
+        {
+          "event": 4,
+          "field": "freshness",
+          "expected": "unknown",
+          "actual": "unknown",
+          "passed": true
+        }
+      ],
+      "events": [
+        {
+          "frame": "HELLO 1",
+          "note": "",
+          "response": {
+            "outcome": "session_opened",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "0",
+            "device_level": 0,
+            "executions": "0",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "SET 1 1 40",
+          "note": "",
+          "response": {
+            "outcome": "applied",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "1",
+            "device_level": 40,
+            "executions": "1",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "SAMPLE 1 1 40",
+          "note": "",
+          "response": {
+            "outcome": "sample_accepted",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "1",
+            "device_level": 40,
+            "executions": "1",
+            "freshness": "fresh",
+            "observed_level": 40
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "CLOCK 5000",
+          "note": "Simulated link silence changes freshness, not the virtual indicator output.",
+          "response": {
+            "outcome": "clock_advanced",
+            "time_ms": "5000",
+            "session": "1",
+            "last_id": "1",
+            "device_level": 40,
+            "executions": "1",
+            "freshness": "stale",
+            "observed_level": 40
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "HELLO 2",
+          "note": "",
+          "response": {
+            "outcome": "session_opened",
+            "time_ms": "5000",
+            "session": "2",
+            "last_id": "0",
+            "device_level": 40,
+            "executions": "1",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        }
+      ]
+    },
+    {
+      "id": "bounds",
+      "title": "Value and sequence boundaries",
+      "description": "Exercise 0, 100 and the maximum 64-bit command ID.",
+      "requirement": "R6",
+      "mode": "flawed",
+      "passed": true,
+      "error": null,
+      "checks": [
+        {
+          "event": 1,
+          "field": "outcome",
+          "expected": "applied",
+          "actual": "applied",
+          "passed": true
+        },
+        {
+          "event": 1,
+          "field": "device_level",
+          "expected": 0,
+          "actual": 0,
+          "passed": true
+        },
+        {
+          "event": 2,
+          "field": "outcome",
+          "expected": "applied",
+          "actual": "applied",
+          "passed": true
+        },
+        {
+          "event": 2,
+          "field": "device_level",
+          "expected": 100,
+          "actual": 100,
+          "passed": true
+        },
+        {
+          "event": 3,
+          "field": "outcome",
+          "expected": "applied",
+          "actual": "applied",
+          "passed": true
+        },
+        {
+          "event": 3,
+          "field": "device_level",
+          "expected": 50,
+          "actual": 50,
+          "passed": true
+        },
+        {
+          "event": 3,
+          "field": "last_id",
+          "expected": "18446744073709551615",
+          "actual": "18446744073709551615",
+          "passed": true
+        },
+        {
+          "event": 4,
+          "field": "outcome",
+          "expected": "invalid_argument",
+          "actual": "invalid_argument",
+          "passed": true
+        },
+        {
+          "event": 4,
+          "field": "device_level",
+          "expected": 50,
+          "actual": 50,
+          "passed": true
+        },
+        {
+          "event": 6,
+          "field": "outcome",
+          "expected": "applied",
+          "actual": "applied",
+          "passed": true
+        },
+        {
+          "event": 6,
+          "field": "device_level",
+          "expected": 30,
+          "actual": 30,
+          "passed": true
+        }
+      ],
+      "events": [
+        {
+          "frame": "HELLO 1",
+          "note": "",
+          "response": {
+            "outcome": "session_opened",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "0",
+            "device_level": 0,
+            "executions": "0",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "SET 1 1 0",
+          "note": "",
+          "response": {
+            "outcome": "applied",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "1",
+            "device_level": 0,
+            "executions": "1",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "SET 1 2 100",
+          "note": "",
+          "response": {
+            "outcome": "applied",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "2",
+            "device_level": 100,
+            "executions": "2",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "SET 1 18446744073709551615 50",
+          "note": "",
+          "response": {
+            "outcome": "applied",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "18446744073709551615",
+            "device_level": 50,
+            "executions": "3",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "SET 1 0 70",
+          "note": "Sequence numbers never wrap silently.",
+          "response": {
+            "outcome": "invalid_argument",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "18446744073709551615",
+            "device_level": 50,
+            "executions": "3",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "HELLO 2",
+          "note": "",
+          "response": {
+            "outcome": "session_opened",
+            "time_ms": "0",
+            "session": "2",
+            "last_id": "0",
+            "device_level": 50,
+            "executions": "3",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "SET 2 1 30",
+          "note": "",
+          "response": {
+            "outcome": "applied",
+            "time_ms": "0",
+            "session": "2",
+            "last_id": "1",
+            "device_level": 30,
+            "executions": "4",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        }
+      ]
+    },
+    {
+      "id": "whitespace",
+      "title": "Serial line formatting",
+      "description": "Accept tabs, spacing, and CRLF-compatible frames.",
+      "requirement": "R6",
+      "mode": "flawed",
+      "passed": true,
+      "error": null,
+      "checks": [
+        {
+          "event": 0,
+          "field": "outcome",
+          "expected": "session_opened",
+          "actual": "session_opened",
+          "passed": true
+        },
+        {
+          "event": 1,
+          "field": "outcome",
+          "expected": "applied",
+          "actual": "applied",
+          "passed": true
+        },
+        {
+          "event": 1,
+          "field": "device_level",
+          "expected": 50,
+          "actual": 50,
+          "passed": true
+        }
+      ],
+      "events": [
+        {
+          "frame": "  HELLO\t1\r",
+          "note": "",
+          "response": {
+            "outcome": "session_opened",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "0",
+            "device_level": 0,
+            "executions": "0",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "SET\t1  1 50\r",
+          "note": "",
+          "response": {
+            "outcome": "applied",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "1",
+            "device_level": 50,
+            "executions": "1",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        }
+      ]
+    },
+    {
+      "id": "sample_validation",
+      "title": "Invalid and duplicate telemetry",
+      "description": "Invalid or duplicate samples cannot make data fresh.",
+      "requirement": "R5",
+      "mode": "flawed",
+      "passed": true,
+      "error": null,
+      "checks": [
+        {
+          "event": 1,
+          "field": "outcome",
+          "expected": "invalid_argument",
+          "actual": "invalid_argument",
+          "passed": true
+        },
+        {
+          "event": 1,
+          "field": "freshness",
+          "expected": "unknown",
+          "actual": "unknown",
+          "passed": true
+        },
+        {
+          "event": 2,
+          "field": "outcome",
+          "expected": "invalid_argument",
+          "actual": "invalid_argument",
+          "passed": true
+        },
+        {
+          "event": 2,
+          "field": "freshness",
+          "expected": "unknown",
+          "actual": "unknown",
+          "passed": true
+        },
+        {
+          "event": 3,
+          "field": "outcome",
+          "expected": "sample_accepted",
+          "actual": "sample_accepted",
+          "passed": true
+        },
+        {
+          "event": 5,
+          "field": "outcome",
+          "expected": "old_sample",
+          "actual": "old_sample",
+          "passed": true
+        },
+        {
+          "event": 6,
+          "field": "freshness",
+          "expected": "stale",
+          "actual": "stale",
+          "passed": true
+        }
+      ],
+      "events": [
+        {
+          "frame": "HELLO 1",
+          "note": "",
+          "response": {
+            "outcome": "session_opened",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "0",
+            "device_level": 0,
+            "executions": "0",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "SAMPLE 1 0 20",
+          "note": "",
+          "response": {
+            "outcome": "invalid_argument",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "0",
+            "device_level": 0,
+            "executions": "0",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "SAMPLE 1 1 101",
+          "note": "",
+          "response": {
+            "outcome": "invalid_argument",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "0",
+            "device_level": 0,
+            "executions": "0",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "SAMPLE 1 1 20",
+          "note": "",
+          "response": {
+            "outcome": "sample_accepted",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "0",
+            "device_level": 0,
+            "executions": "0",
+            "freshness": "fresh",
+            "observed_level": 20
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "CLOCK 900",
+          "note": "",
+          "response": {
+            "outcome": "clock_advanced",
+            "time_ms": "900",
+            "session": "1",
+            "last_id": "0",
+            "device_level": 0,
+            "executions": "0",
+            "freshness": "fresh",
+            "observed_level": 20
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "SAMPLE 1 1 20",
+          "note": "A duplicate sample cannot extend freshness.",
+          "response": {
+            "outcome": "old_sample",
+            "time_ms": "900",
+            "session": "1",
+            "last_id": "0",
+            "device_level": 0,
+            "executions": "0",
+            "freshness": "fresh",
+            "observed_level": 20
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "CLOCK 1000",
+          "note": "",
+          "response": {
+            "outcome": "clock_advanced",
+            "time_ms": "1000",
+            "session": "1",
+            "last_id": "0",
+            "device_level": 0,
+            "executions": "0",
+            "freshness": "stale",
+            "observed_level": 20
+          },
+          "delivery": "delivered"
+        }
+      ]
+    },
+    {
+      "id": "normal",
+      "title": "Normal communication",
+      "description": "Establish a session, apply a command, and receive telemetry.",
+      "requirement": "R1",
+      "mode": "protected",
+      "passed": true,
+      "error": null,
+      "checks": [
+        {
+          "event": 0,
+          "field": "outcome",
+          "expected": "session_opened",
+          "actual": "session_opened",
+          "passed": true
+        },
+        {
+          "event": 1,
+          "field": "outcome",
+          "expected": "applied",
+          "actual": "applied",
+          "passed": true
+        },
+        {
+          "event": 1,
+          "field": "device_level",
+          "expected": 35,
+          "actual": 35,
+          "passed": true
+        },
+        {
+          "event": 1,
+          "field": "executions",
+          "expected": "1",
+          "actual": "1",
+          "passed": true
+        },
+        {
+          "event": 2,
+          "field": "outcome",
+          "expected": "sample_accepted",
+          "actual": "sample_accepted",
+          "passed": true
+        },
+        {
+          "event": 2,
+          "field": "observed_level",
+          "expected": 35,
+          "actual": 35,
+          "passed": true
+        },
+        {
+          "event": 2,
+          "field": "freshness",
+          "expected": "fresh",
+          "actual": "fresh",
+          "passed": true
+        }
+      ],
+      "events": [
+        {
+          "frame": "HELLO 1",
+          "note": "",
+          "response": {
+            "outcome": "session_opened",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "0",
+            "device_level": 0,
+            "executions": "0",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "SET 1 1 35",
+          "note": "",
+          "response": {
+            "outcome": "applied",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "1",
+            "device_level": 35,
+            "executions": "1",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "SAMPLE 1 1 35",
+          "note": "",
+          "response": {
+            "outcome": "sample_accepted",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "1",
+            "device_level": 35,
+            "executions": "1",
+            "freshness": "fresh",
+            "observed_level": 35
+          },
+          "delivery": "delivered"
+        }
+      ]
+    },
+    {
+      "id": "lost_ack",
+      "title": "Lost acknowledgement",
+      "description": "A missing reply must not cause duplicate execution.",
+      "requirement": "R2",
+      "mode": "protected",
+      "passed": true,
+      "error": null,
+      "checks": [
+        {
+          "event": 2,
+          "field": "outcome",
+          "expected": "duplicate",
+          "actual": "duplicate",
+          "passed": true
+        },
+        {
+          "event": 2,
+          "field": "executions",
+          "expected": "1",
+          "actual": "1",
+          "passed": true
+        },
+        {
+          "event": 2,
+          "field": "device_level",
+          "expected": 35,
+          "actual": 35,
+          "passed": true
+        }
+      ],
+      "events": [
+        {
+          "frame": "HELLO 1",
+          "note": "",
+          "response": {
+            "outcome": "session_opened",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "0",
+            "device_level": 0,
+            "executions": "0",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "SET 1 1 35",
+          "note": "The controller executes; the simulated link discards its acknowledgement.",
+          "response": {
+            "outcome": "applied",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "1",
+            "device_level": 35,
+            "executions": "1",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "reply_dropped"
+        },
+        {
+          "frame": "SET 1 1 35",
+          "note": "Sender retries the same command ID after receiving no acknowledgement.",
+          "response": {
+            "outcome": "duplicate",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "1",
+            "device_level": 35,
+            "executions": "1",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        }
+      ]
+    },
+    {
+      "id": "old_session",
+      "title": "Delayed command after reconnect",
+      "description": "Reject commands belonging to an earlier session.",
+      "requirement": "R3",
+      "mode": "protected",
+      "passed": true,
+      "error": null,
+      "checks": [
+        {
+          "event": 2,
+          "field": "device_level",
+          "expected": 20,
+          "actual": 20,
+          "passed": true
+        },
+        {
+          "event": 3,
+          "field": "outcome",
+          "expected": "wrong_session",
+          "actual": "wrong_session",
+          "passed": true
+        },
+        {
+          "event": 3,
+          "field": "device_level",
+          "expected": 20,
+          "actual": 20,
+          "passed": true
+        },
+        {
+          "event": 3,
+          "field": "executions",
+          "expected": "1",
+          "actual": "1",
+          "passed": true
+        }
+      ],
+      "events": [
+        {
+          "frame": "HELLO 1",
+          "note": "",
+          "response": {
+            "outcome": "session_opened",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "0",
+            "device_level": 0,
+            "executions": "0",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "SET 1 1 20",
+          "note": "",
+          "response": {
+            "outcome": "applied",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "1",
+            "device_level": 20,
+            "executions": "1",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "HELLO 2",
+          "note": "Reconnect with a new session; device output is retained.",
+          "response": {
+            "outcome": "session_opened",
+            "time_ms": "0",
+            "session": "2",
+            "last_id": "0",
+            "device_level": 20,
+            "executions": "1",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "SET 1 2 80",
+          "note": "A delayed command from the previous connection arrives.",
+          "response": {
+            "outcome": "wrong_session",
+            "time_ms": "0",
+            "session": "2",
+            "last_id": "0",
+            "device_level": 20,
+            "executions": "1",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        }
+      ]
+    },
+    {
+      "id": "reordered",
+      "title": "Out-of-order commands",
+      "description": "An older command must not overwrite a newer one.",
+      "requirement": "R4",
+      "mode": "protected",
+      "passed": true,
+      "error": null,
+      "checks": [
+        {
+          "event": 1,
+          "field": "outcome",
+          "expected": "applied",
+          "actual": "applied",
+          "passed": true
+        },
+        {
+          "event": 2,
+          "field": "outcome",
+          "expected": "old_command",
+          "actual": "old_command",
+          "passed": true
+        },
+        {
+          "event": 2,
+          "field": "device_level",
+          "expected": 60,
+          "actual": 60,
+          "passed": true
+        },
+        {
+          "event": 2,
+          "field": "executions",
+          "expected": "1",
+          "actual": "1",
+          "passed": true
+        }
+      ],
+      "events": [
+        {
+          "frame": "HELLO 1",
+          "note": "",
+          "response": {
+            "outcome": "session_opened",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "0",
+            "device_level": 0,
+            "executions": "0",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "SET 1 2 60",
+          "note": "",
+          "response": {
+            "outcome": "applied",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "2",
+            "device_level": 60,
+            "executions": "1",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "SET 1 1 10",
+          "note": "An earlier command arrives after a newer command.",
+          "response": {
+            "outcome": "old_command",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "2",
+            "device_level": 60,
+            "executions": "1",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        }
+      ]
+    },
+    {
+      "id": "conflict",
+      "title": "Command ID conflict",
+      "description": "Reject a changed payload reusing the latest command ID.",
+      "requirement": "R2",
+      "mode": "protected",
+      "passed": true,
+      "error": null,
+      "checks": [
+        {
+          "event": 2,
+          "field": "outcome",
+          "expected": "id_conflict",
+          "actual": "id_conflict",
+          "passed": true
+        },
+        {
+          "event": 2,
+          "field": "device_level",
+          "expected": 20,
+          "actual": 20,
+          "passed": true
+        },
+        {
+          "event": 2,
+          "field": "executions",
+          "expected": "1",
+          "actual": "1",
+          "passed": true
+        }
+      ],
+      "events": [
+        {
+          "frame": "HELLO 1",
+          "note": "",
+          "response": {
+            "outcome": "session_opened",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "0",
+            "device_level": 0,
+            "executions": "0",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "SET 1 1 20",
+          "note": "",
+          "response": {
+            "outcome": "applied",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "1",
+            "device_level": 20,
+            "executions": "1",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "SET 1 1 90",
+          "note": "The same ID must never identify two different payloads.",
+          "response": {
+            "outcome": "id_conflict",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "1",
+            "device_level": 20,
+            "executions": "1",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        }
+      ]
+    },
+    {
+      "id": "stale",
+      "title": "Telemetry freshness boundary",
+      "description": "Mark readings stale at exactly 1,000 ms without a new sample.",
+      "requirement": "R5",
+      "mode": "protected",
+      "passed": true,
+      "error": null,
+      "checks": [
+        {
+          "event": 2,
+          "field": "freshness",
+          "expected": "fresh",
+          "actual": "fresh",
+          "passed": true
+        },
+        {
+          "event": 3,
+          "field": "freshness",
+          "expected": "stale",
+          "actual": "stale",
+          "passed": true
+        },
+        {
+          "event": 3,
+          "field": "observed_level",
+          "expected": 25,
+          "actual": 25,
+          "passed": true
+        }
+      ],
+      "events": [
+        {
+          "frame": "HELLO 1",
+          "note": "",
+          "response": {
+            "outcome": "session_opened",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "0",
+            "device_level": 0,
+            "executions": "0",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "SAMPLE 1 1 25",
+          "note": "",
+          "response": {
+            "outcome": "sample_accepted",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "0",
+            "device_level": 0,
+            "executions": "0",
+            "freshness": "fresh",
+            "observed_level": 25
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "CLOCK 999",
+          "note": "Advance virtual time, without delivering telemetry.",
+          "response": {
+            "outcome": "clock_advanced",
+            "time_ms": "999",
+            "session": "1",
+            "last_id": "0",
+            "device_level": 0,
+            "executions": "0",
+            "freshness": "fresh",
+            "observed_level": 25
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "CLOCK 1000",
+          "note": "The 1,000 ms limit is an educational requirement.",
+          "response": {
+            "outcome": "clock_advanced",
+            "time_ms": "1000",
+            "session": "1",
+            "last_id": "0",
+            "device_level": 0,
+            "executions": "0",
+            "freshness": "stale",
+            "observed_level": 25
+          },
+          "delivery": "delivered"
+        }
+      ]
+    },
+    {
+      "id": "recovery",
+      "title": "Telemetry recovery and reordering",
+      "description": "Recover on fresh telemetry without accepting delayed old samples.",
+      "requirement": "R5",
+      "mode": "protected",
+      "passed": true,
+      "error": null,
+      "checks": [
+        {
+          "event": 2,
+          "field": "freshness",
+          "expected": "stale",
+          "actual": "stale",
+          "passed": true
+        },
+        {
+          "event": 3,
+          "field": "freshness",
+          "expected": "fresh",
+          "actual": "fresh",
+          "passed": true
+        },
+        {
+          "event": 3,
+          "field": "observed_level",
+          "expected": 30,
+          "actual": 30,
+          "passed": true
+        },
+        {
+          "event": 5,
+          "field": "outcome",
+          "expected": "old_sample",
+          "actual": "old_sample",
+          "passed": true
+        },
+        {
+          "event": 5,
+          "field": "observed_level",
+          "expected": 30,
+          "actual": 30,
+          "passed": true
+        },
+        {
+          "event": 6,
+          "field": "freshness",
+          "expected": "stale",
+          "actual": "stale",
+          "passed": true
+        }
+      ],
+      "events": [
+        {
+          "frame": "HELLO 1",
+          "note": "",
+          "response": {
+            "outcome": "session_opened",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "0",
+            "device_level": 0,
+            "executions": "0",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "SAMPLE 1 1 20",
+          "note": "",
+          "response": {
+            "outcome": "sample_accepted",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "0",
+            "device_level": 0,
+            "executions": "0",
+            "freshness": "fresh",
+            "observed_level": 20
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "CLOCK 1200",
+          "note": "",
+          "response": {
+            "outcome": "clock_advanced",
+            "time_ms": "1200",
+            "session": "1",
+            "last_id": "0",
+            "device_level": 0,
+            "executions": "0",
+            "freshness": "stale",
+            "observed_level": 20
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "SAMPLE 1 2 30",
+          "note": "A newer sample restores freshness.",
+          "response": {
+            "outcome": "sample_accepted",
+            "time_ms": "1200",
+            "session": "1",
+            "last_id": "0",
+            "device_level": 0,
+            "executions": "0",
+            "freshness": "fresh",
+            "observed_level": 30
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "CLOCK 1500",
+          "note": "",
+          "response": {
+            "outcome": "clock_advanced",
+            "time_ms": "1500",
+            "session": "1",
+            "last_id": "0",
+            "device_level": 0,
+            "executions": "0",
+            "freshness": "fresh",
+            "observed_level": 30
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "SAMPLE 1 1 20",
+          "note": "Delayed telemetry cannot replace the latest sample.",
+          "response": {
+            "outcome": "old_sample",
+            "time_ms": "1500",
+            "session": "1",
+            "last_id": "0",
+            "device_level": 0,
+            "executions": "0",
+            "freshness": "fresh",
+            "observed_level": 30
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "CLOCK 2200",
+          "note": "Rejected telemetry must not refresh the freshness timer.",
+          "response": {
+            "outcome": "clock_advanced",
+            "time_ms": "2200",
+            "session": "1",
+            "last_id": "0",
+            "device_level": 0,
+            "executions": "0",
+            "freshness": "stale",
+            "observed_level": 30
+          },
+          "delivery": "delivered"
+        }
+      ]
+    },
+    {
+      "id": "lost_request",
+      "title": "Lost command",
+      "description": "Dropping a request leaves the device unchanged; a retry can succeed.",
+      "requirement": "R1",
+      "mode": "protected",
+      "passed": true,
+      "error": null,
+      "checks": [
+        {
+          "event": 2,
+          "field": "device_level",
+          "expected": 0,
+          "actual": 0,
+          "passed": true
+        },
+        {
+          "event": 2,
+          "field": "executions",
+          "expected": "0",
+          "actual": "0",
+          "passed": true
+        },
+        {
+          "event": 3,
+          "field": "outcome",
+          "expected": "applied",
+          "actual": "applied",
+          "passed": true
+        },
+        {
+          "event": 3,
+          "field": "executions",
+          "expected": "1",
+          "actual": "1",
+          "passed": true
+        },
+        {
+          "event": 3,
+          "field": "device_level",
+          "expected": 75,
+          "actual": 75,
+          "passed": true
+        }
+      ],
+      "events": [
+        {
+          "frame": "HELLO 1",
+          "note": "",
+          "response": {
+            "outcome": "session_opened",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "0",
+            "device_level": 0,
+            "executions": "0",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "SET 1 1 75",
+          "note": "This frame never reaches the C++ subprocess.",
+          "response": null,
+          "delivery": "request_dropped"
+        },
+        {
+          "frame": "STATUS",
+          "note": "",
+          "response": {
+            "outcome": "snapshot",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "0",
+            "device_level": 0,
+            "executions": "0",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "SET 1 1 75",
+          "note": "The sender retries after loss.",
+          "response": {
+            "outcome": "applied",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "1",
+            "device_level": 75,
+            "executions": "1",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        }
+      ]
+    },
+    {
+      "id": "handshake",
+      "title": "Repeated handshake",
+      "description": "A handshake retry must not erase duplicate-command protection.",
+      "requirement": "R2",
+      "mode": "protected",
+      "passed": true,
+      "error": null,
+      "checks": [
+        {
+          "event": 2,
+          "field": "outcome",
+          "expected": "session_resumed",
+          "actual": "session_resumed",
+          "passed": true
+        },
+        {
+          "event": 2,
+          "field": "last_id",
+          "expected": "1",
+          "actual": "1",
+          "passed": true
+        },
+        {
+          "event": 3,
+          "field": "outcome",
+          "expected": "duplicate",
+          "actual": "duplicate",
+          "passed": true
+        },
+        {
+          "event": 3,
+          "field": "executions",
+          "expected": "1",
+          "actual": "1",
+          "passed": true
+        }
+      ],
+      "events": [
+        {
+          "frame": "HELLO 1",
+          "note": "",
+          "response": {
+            "outcome": "session_opened",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "0",
+            "device_level": 0,
+            "executions": "0",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "SET 1 1 45",
+          "note": "",
+          "response": {
+            "outcome": "applied",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "1",
+            "device_level": 45,
+            "executions": "1",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "HELLO 1",
+          "note": "A retried handshake must preserve command history.",
+          "response": {
+            "outcome": "session_resumed",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "1",
+            "device_level": 45,
+            "executions": "1",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "SET 1 1 45",
+          "note": "",
+          "response": {
+            "outcome": "duplicate",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "1",
+            "device_level": 45,
+            "executions": "1",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        }
+      ]
+    },
+    {
+      "id": "malformed",
+      "title": "Malformed and invalid input",
+      "description": "Reject malformed frames and out-of-range values without mutations.",
+      "requirement": "R6",
+      "mode": "protected",
+      "passed": true,
+      "error": null,
+      "checks": [
+        {
+          "event": 2,
+          "field": "outcome",
+          "expected": "invalid_frame",
+          "actual": "invalid_frame",
+          "passed": true
+        },
+        {
+          "event": 2,
+          "field": "executions",
+          "expected": "1",
+          "actual": "1",
+          "passed": true
+        },
+        {
+          "event": 2,
+          "field": "device_level",
+          "expected": 40,
+          "actual": 40,
+          "passed": true
+        },
+        {
+          "event": 3,
+          "field": "outcome",
+          "expected": "invalid_frame",
+          "actual": "invalid_frame",
+          "passed": true
+        },
+        {
+          "event": 3,
+          "field": "executions",
+          "expected": "1",
+          "actual": "1",
+          "passed": true
+        },
+        {
+          "event": 3,
+          "field": "device_level",
+          "expected": 40,
+          "actual": 40,
+          "passed": true
+        },
+        {
+          "event": 4,
+          "field": "outcome",
+          "expected": "invalid_frame",
+          "actual": "invalid_frame",
+          "passed": true
+        },
+        {
+          "event": 4,
+          "field": "executions",
+          "expected": "1",
+          "actual": "1",
+          "passed": true
+        },
+        {
+          "event": 4,
+          "field": "device_level",
+          "expected": 40,
+          "actual": 40,
+          "passed": true
+        },
+        {
+          "event": 5,
+          "field": "outcome",
+          "expected": "invalid_frame",
+          "actual": "invalid_frame",
+          "passed": true
+        },
+        {
+          "event": 5,
+          "field": "executions",
+          "expected": "1",
+          "actual": "1",
+          "passed": true
+        },
+        {
+          "event": 5,
+          "field": "device_level",
+          "expected": 40,
+          "actual": 40,
+          "passed": true
+        },
+        {
+          "event": 6,
+          "field": "outcome",
+          "expected": "invalid_frame",
+          "actual": "invalid_frame",
+          "passed": true
+        },
+        {
+          "event": 6,
+          "field": "executions",
+          "expected": "1",
+          "actual": "1",
+          "passed": true
+        },
+        {
+          "event": 6,
+          "field": "device_level",
+          "expected": 40,
+          "actual": 40,
+          "passed": true
+        },
+        {
+          "event": 7,
+          "field": "outcome",
+          "expected": "invalid_frame",
+          "actual": "invalid_frame",
+          "passed": true
+        },
+        {
+          "event": 7,
+          "field": "executions",
+          "expected": "1",
+          "actual": "1",
+          "passed": true
+        },
+        {
+          "event": 7,
+          "field": "device_level",
+          "expected": 40,
+          "actual": 40,
+          "passed": true
+        },
+        {
+          "event": 8,
+          "field": "outcome",
+          "expected": "invalid_frame",
+          "actual": "invalid_frame",
+          "passed": true
+        },
+        {
+          "event": 8,
+          "field": "executions",
+          "expected": "1",
+          "actual": "1",
+          "passed": true
+        },
+        {
+          "event": 8,
+          "field": "device_level",
+          "expected": 40,
+          "actual": 40,
+          "passed": true
+        },
+        {
+          "event": 9,
+          "field": "outcome",
+          "expected": "invalid_frame",
+          "actual": "invalid_frame",
+          "passed": true
+        },
+        {
+          "event": 9,
+          "field": "executions",
+          "expected": "1",
+          "actual": "1",
+          "passed": true
+        },
+        {
+          "event": 9,
+          "field": "device_level",
+          "expected": 40,
+          "actual": 40,
+          "passed": true
+        },
+        {
+          "event": 10,
+          "field": "outcome",
+          "expected": "invalid_frame",
+          "actual": "invalid_frame",
+          "passed": true
+        },
+        {
+          "event": 10,
+          "field": "executions",
+          "expected": "1",
+          "actual": "1",
+          "passed": true
+        },
+        {
+          "event": 10,
+          "field": "device_level",
+          "expected": 40,
+          "actual": 40,
+          "passed": true
+        },
+        {
+          "event": 11,
+          "field": "outcome",
+          "expected": "invalid_frame",
+          "actual": "invalid_frame",
+          "passed": true
+        },
+        {
+          "event": 11,
+          "field": "executions",
+          "expected": "1",
+          "actual": "1",
+          "passed": true
+        },
+        {
+          "event": 11,
+          "field": "device_level",
+          "expected": 40,
+          "actual": 40,
+          "passed": true
+        },
+        {
+          "event": 12,
+          "field": "outcome",
+          "expected": "invalid_argument",
+          "actual": "invalid_argument",
+          "passed": true
+        },
+        {
+          "event": 12,
+          "field": "executions",
+          "expected": "1",
+          "actual": "1",
+          "passed": true
+        },
+        {
+          "event": 12,
+          "field": "device_level",
+          "expected": 40,
+          "actual": 40,
+          "passed": true
+        },
+        {
+          "event": 13,
+          "field": "outcome",
+          "expected": "invalid_argument",
+          "actual": "invalid_argument",
+          "passed": true
+        },
+        {
+          "event": 13,
+          "field": "executions",
+          "expected": "1",
+          "actual": "1",
+          "passed": true
+        },
+        {
+          "event": 13,
+          "field": "device_level",
+          "expected": 40,
+          "actual": 40,
+          "passed": true
+        },
+        {
+          "event": 14,
+          "field": "outcome",
+          "expected": "invalid_argument",
+          "actual": "invalid_argument",
+          "passed": true
+        },
+        {
+          "event": 14,
+          "field": "executions",
+          "expected": "1",
+          "actual": "1",
+          "passed": true
+        },
+        {
+          "event": 14,
+          "field": "device_level",
+          "expected": 40,
+          "actual": 40,
+          "passed": true
+        }
+      ],
+      "events": [
+        {
+          "frame": "HELLO 1",
+          "note": "",
+          "response": {
+            "outcome": "session_opened",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "0",
+            "device_level": 0,
+            "executions": "0",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "SET 1 1 40",
+          "note": "",
+          "response": {
+            "outcome": "applied",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "1",
+            "device_level": 40,
+            "executions": "1",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "",
+          "note": "",
+          "response": {
+            "outcome": "invalid_frame",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "1",
+            "device_level": 40,
+            "executions": "1",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "SET 1 2",
+          "note": "",
+          "response": {
+            "outcome": "invalid_frame",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "1",
+            "device_level": 40,
+            "executions": "1",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "SET 1 2 50 extra",
+          "note": "",
+          "response": {
+            "outcome": "invalid_frame",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "1",
+            "device_level": 40,
+            "executions": "1",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "SET -1 2 30",
+          "note": "",
+          "response": {
+            "outcome": "invalid_frame",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "1",
+            "device_level": 40,
+            "executions": "1",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "SET 1 2 NaN",
+          "note": "",
+          "response": {
+            "outcome": "invalid_frame",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "1",
+            "device_level": 40,
+            "executions": "1",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "SET 1 2 1.5",
+          "note": "",
+          "response": {
+            "outcome": "invalid_frame",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "1",
+            "device_level": 40,
+            "executions": "1",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "SET 1 2 +5",
+          "note": "",
+          "response": {
+            "outcome": "invalid_frame",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "1",
+            "device_level": 40,
+            "executions": "1",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "SET 1 18446744073709551616 50",
+          "note": "",
+          "response": {
+            "outcome": "invalid_frame",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "1",
+            "device_level": 40,
+            "executions": "1",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "SET 1 2 50\u0000",
+          "note": "",
+          "response": {
+            "outcome": "invalid_frame",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "1",
+            "device_level": 40,
+            "executions": "1",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "UNKNOWN",
+          "note": "",
+          "response": {
+            "outcome": "invalid_frame",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "1",
+            "device_level": 40,
+            "executions": "1",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "SET 1 2 101",
+          "note": "",
+          "response": {
+            "outcome": "invalid_argument",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "1",
+            "device_level": 40,
+            "executions": "1",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "SET 1 2 18446744073709551615",
+          "note": "",
+          "response": {
+            "outcome": "invalid_argument",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "1",
+            "device_level": 40,
+            "executions": "1",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "SET 1 0 10",
+          "note": "",
+          "response": {
+            "outcome": "invalid_argument",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "1",
+            "device_level": 40,
+            "executions": "1",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        }
+      ]
+    },
+    {
+      "id": "oversized",
+      "title": "Oversized input recovery",
+      "description": "Reject a long frame and correctly parse the next frame.",
+      "requirement": "R6",
+      "mode": "protected",
+      "passed": true,
+      "error": null,
+      "checks": [
+        {
+          "event": 1,
+          "field": "outcome",
+          "expected": "frame_too_long",
+          "actual": "frame_too_long",
+          "passed": true
+        },
+        {
+          "event": 1,
+          "field": "executions",
+          "expected": "0",
+          "actual": "0",
+          "passed": true
+        },
+        {
+          "event": 2,
+          "field": "outcome",
+          "expected": "applied",
+          "actual": "applied",
+          "passed": true
+        },
+        {
+          "event": 2,
+          "field": "device_level",
+          "expected": 30,
+          "actual": 30,
+          "passed": true
+        }
+      ],
+      "events": [
+        {
+          "frame": "HELLO 1",
+          "note": "",
+          "response": {
+            "outcome": "session_opened",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "0",
+            "device_level": 0,
+            "executions": "0",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\u2026 [truncated for display]",
+          "note": "Consume an oversized frame without losing the next frame boundary.",
+          "response": {
+            "outcome": "frame_too_long",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "0",
+            "device_level": 0,
+            "executions": "0",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "SET 1 1 30",
+          "note": "",
+          "response": {
+            "outcome": "applied",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "1",
+            "device_level": 30,
+            "executions": "1",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        }
+      ]
+    },
+    {
+      "id": "session",
+      "title": "Session establishment",
+      "description": "Require a session and reject zero or decreasing session epochs.",
+      "requirement": "R3",
+      "mode": "protected",
+      "passed": true,
+      "error": null,
+      "checks": [
+        {
+          "event": 0,
+          "field": "outcome",
+          "expected": "no_session",
+          "actual": "no_session",
+          "passed": true
+        },
+        {
+          "event": 0,
+          "field": "executions",
+          "expected": "0",
+          "actual": "0",
+          "passed": true
+        },
+        {
+          "event": 1,
+          "field": "outcome",
+          "expected": "invalid_session",
+          "actual": "invalid_session",
+          "passed": true
+        },
+        {
+          "event": 1,
+          "field": "session",
+          "expected": "0",
+          "actual": "0",
+          "passed": true
+        },
+        {
+          "event": 2,
+          "field": "outcome",
+          "expected": "session_opened",
+          "actual": "session_opened",
+          "passed": true
+        },
+        {
+          "event": 3,
+          "field": "outcome",
+          "expected": "invalid_session",
+          "actual": "invalid_session",
+          "passed": true
+        },
+        {
+          "event": 3,
+          "field": "session",
+          "expected": "2",
+          "actual": "2",
+          "passed": true
+        }
+      ],
+      "events": [
+        {
+          "frame": "SET 1 1 50",
+          "note": "",
+          "response": {
+            "outcome": "no_session",
+            "time_ms": "0",
+            "session": "0",
+            "last_id": "0",
+            "device_level": 0,
+            "executions": "0",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "HELLO 0",
+          "note": "",
+          "response": {
+            "outcome": "invalid_session",
+            "time_ms": "0",
+            "session": "0",
+            "last_id": "0",
+            "device_level": 0,
+            "executions": "0",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "HELLO 2",
+          "note": "",
+          "response": {
+            "outcome": "session_opened",
+            "time_ms": "0",
+            "session": "2",
+            "last_id": "0",
+            "device_level": 0,
+            "executions": "0",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "HELLO 1",
+          "note": "",
+          "response": {
+            "outcome": "invalid_session",
+            "time_ms": "0",
+            "session": "2",
+            "last_id": "0",
+            "device_level": 0,
+            "executions": "0",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        }
+      ]
+    },
+    {
+      "id": "telemetry_epoch",
+      "title": "Old-session telemetry",
+      "description": "A new connection starts with unknown monitoring state.",
+      "requirement": "R5",
+      "mode": "protected",
+      "passed": true,
+      "error": null,
+      "checks": [
+        {
+          "event": 2,
+          "field": "freshness",
+          "expected": "unknown",
+          "actual": "unknown",
+          "passed": true
+        },
+        {
+          "event": 2,
+          "field": "observed_level",
+          "expected": null,
+          "actual": null,
+          "passed": true
+        },
+        {
+          "event": 3,
+          "field": "outcome",
+          "expected": "wrong_session",
+          "actual": "wrong_session",
+          "passed": true
+        },
+        {
+          "event": 3,
+          "field": "freshness",
+          "expected": "unknown",
+          "actual": "unknown",
+          "passed": true
+        },
+        {
+          "event": 3,
+          "field": "observed_level",
+          "expected": null,
+          "actual": null,
+          "passed": true
+        },
+        {
+          "event": 4,
+          "field": "outcome",
+          "expected": "sample_accepted",
+          "actual": "sample_accepted",
+          "passed": true
+        },
+        {
+          "event": 4,
+          "field": "freshness",
+          "expected": "fresh",
+          "actual": "fresh",
+          "passed": true
+        }
+      ],
+      "events": [
+        {
+          "frame": "HELLO 1",
+          "note": "",
+          "response": {
+            "outcome": "session_opened",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "0",
+            "device_level": 0,
+            "executions": "0",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "SAMPLE 1 1 20",
+          "note": "",
+          "response": {
+            "outcome": "sample_accepted",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "0",
+            "device_level": 0,
+            "executions": "0",
+            "freshness": "fresh",
+            "observed_level": 20
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "HELLO 2",
+          "note": "",
+          "response": {
+            "outcome": "session_opened",
+            "time_ms": "0",
+            "session": "2",
+            "last_id": "0",
+            "device_level": 0,
+            "executions": "0",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "SAMPLE 1 2 80",
+          "note": "Telemetry from an earlier connection must not appear current.",
+          "response": {
+            "outcome": "wrong_session",
+            "time_ms": "0",
+            "session": "2",
+            "last_id": "0",
+            "device_level": 0,
+            "executions": "0",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "SAMPLE 2 1 20",
+          "note": "",
+          "response": {
+            "outcome": "sample_accepted",
+            "time_ms": "0",
+            "session": "2",
+            "last_id": "0",
+            "device_level": 0,
+            "executions": "0",
+            "freshness": "fresh",
+            "observed_level": 20
+          },
+          "delivery": "delivered"
+        }
+      ]
+    },
+    {
+      "id": "clock",
+      "title": "Monotonic test clock",
+      "description": "The deterministic fixture refuses backward time.",
+      "requirement": "R7",
+      "mode": "protected",
+      "passed": true,
+      "error": null,
+      "checks": [
+        {
+          "event": 1,
+          "field": "outcome",
+          "expected": "clock_regression",
+          "actual": "clock_regression",
+          "passed": true
+        },
+        {
+          "event": 1,
+          "field": "time_ms",
+          "expected": "500",
+          "actual": "500",
+          "passed": true
+        }
+      ],
+      "events": [
+        {
+          "frame": "CLOCK 500",
+          "note": "",
+          "response": {
+            "outcome": "clock_advanced",
+            "time_ms": "500",
+            "session": "0",
+            "last_id": "0",
+            "device_level": 0,
+            "executions": "0",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "CLOCK 499",
+          "note": "",
+          "response": {
+            "outcome": "clock_regression",
+            "time_ms": "500",
+            "session": "0",
+            "last_id": "0",
+            "device_level": 0,
+            "executions": "0",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        }
+      ]
+    },
+    {
+      "id": "disconnect",
+      "title": "Link silence and reconnection",
+      "description": "A link interruption alone never changes the indicator setting.",
+      "requirement": "R8",
+      "mode": "protected",
+      "passed": true,
+      "error": null,
+      "checks": [
+        {
+          "event": 3,
+          "field": "device_level",
+          "expected": 40,
+          "actual": 40,
+          "passed": true
+        },
+        {
+          "event": 3,
+          "field": "executions",
+          "expected": "1",
+          "actual": "1",
+          "passed": true
+        },
+        {
+          "event": 3,
+          "field": "freshness",
+          "expected": "stale",
+          "actual": "stale",
+          "passed": true
+        },
+        {
+          "event": 4,
+          "field": "device_level",
+          "expected": 40,
+          "actual": 40,
+          "passed": true
+        },
+        {
+          "event": 4,
+          "field": "executions",
+          "expected": "1",
+          "actual": "1",
+          "passed": true
+        },
+        {
+          "event": 4,
+          "field": "freshness",
+          "expected": "unknown",
+          "actual": "unknown",
+          "passed": true
+        }
+      ],
+      "events": [
+        {
+          "frame": "HELLO 1",
+          "note": "",
+          "response": {
+            "outcome": "session_opened",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "0",
+            "device_level": 0,
+            "executions": "0",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "SET 1 1 40",
+          "note": "",
+          "response": {
+            "outcome": "applied",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "1",
+            "device_level": 40,
+            "executions": "1",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "SAMPLE 1 1 40",
+          "note": "",
+          "response": {
+            "outcome": "sample_accepted",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "1",
+            "device_level": 40,
+            "executions": "1",
+            "freshness": "fresh",
+            "observed_level": 40
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "CLOCK 5000",
+          "note": "Simulated link silence changes freshness, not the virtual indicator output.",
+          "response": {
+            "outcome": "clock_advanced",
+            "time_ms": "5000",
+            "session": "1",
+            "last_id": "1",
+            "device_level": 40,
+            "executions": "1",
+            "freshness": "stale",
+            "observed_level": 40
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "HELLO 2",
+          "note": "",
+          "response": {
+            "outcome": "session_opened",
+            "time_ms": "5000",
+            "session": "2",
+            "last_id": "0",
+            "device_level": 40,
+            "executions": "1",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        }
+      ]
+    },
+    {
+      "id": "bounds",
+      "title": "Value and sequence boundaries",
+      "description": "Exercise 0, 100 and the maximum 64-bit command ID.",
+      "requirement": "R6",
+      "mode": "protected",
+      "passed": true,
+      "error": null,
+      "checks": [
+        {
+          "event": 1,
+          "field": "outcome",
+          "expected": "applied",
+          "actual": "applied",
+          "passed": true
+        },
+        {
+          "event": 1,
+          "field": "device_level",
+          "expected": 0,
+          "actual": 0,
+          "passed": true
+        },
+        {
+          "event": 2,
+          "field": "outcome",
+          "expected": "applied",
+          "actual": "applied",
+          "passed": true
+        },
+        {
+          "event": 2,
+          "field": "device_level",
+          "expected": 100,
+          "actual": 100,
+          "passed": true
+        },
+        {
+          "event": 3,
+          "field": "outcome",
+          "expected": "applied",
+          "actual": "applied",
+          "passed": true
+        },
+        {
+          "event": 3,
+          "field": "device_level",
+          "expected": 50,
+          "actual": 50,
+          "passed": true
+        },
+        {
+          "event": 3,
+          "field": "last_id",
+          "expected": "18446744073709551615",
+          "actual": "18446744073709551615",
+          "passed": true
+        },
+        {
+          "event": 4,
+          "field": "outcome",
+          "expected": "invalid_argument",
+          "actual": "invalid_argument",
+          "passed": true
+        },
+        {
+          "event": 4,
+          "field": "device_level",
+          "expected": 50,
+          "actual": 50,
+          "passed": true
+        },
+        {
+          "event": 6,
+          "field": "outcome",
+          "expected": "applied",
+          "actual": "applied",
+          "passed": true
+        },
+        {
+          "event": 6,
+          "field": "device_level",
+          "expected": 30,
+          "actual": 30,
+          "passed": true
+        }
+      ],
+      "events": [
+        {
+          "frame": "HELLO 1",
+          "note": "",
+          "response": {
+            "outcome": "session_opened",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "0",
+            "device_level": 0,
+            "executions": "0",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "SET 1 1 0",
+          "note": "",
+          "response": {
+            "outcome": "applied",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "1",
+            "device_level": 0,
+            "executions": "1",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "SET 1 2 100",
+          "note": "",
+          "response": {
+            "outcome": "applied",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "2",
+            "device_level": 100,
+            "executions": "2",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "SET 1 18446744073709551615 50",
+          "note": "",
+          "response": {
+            "outcome": "applied",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "18446744073709551615",
+            "device_level": 50,
+            "executions": "3",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "SET 1 0 70",
+          "note": "Sequence numbers never wrap silently.",
+          "response": {
+            "outcome": "invalid_argument",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "18446744073709551615",
+            "device_level": 50,
+            "executions": "3",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "HELLO 2",
+          "note": "",
+          "response": {
+            "outcome": "session_opened",
+            "time_ms": "0",
+            "session": "2",
+            "last_id": "0",
+            "device_level": 50,
+            "executions": "3",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "SET 2 1 30",
+          "note": "",
+          "response": {
+            "outcome": "applied",
+            "time_ms": "0",
+            "session": "2",
+            "last_id": "1",
+            "device_level": 30,
+            "executions": "4",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        }
+      ]
+    },
+    {
+      "id": "whitespace",
+      "title": "Serial line formatting",
+      "description": "Accept tabs, spacing, and CRLF-compatible frames.",
+      "requirement": "R6",
+      "mode": "protected",
+      "passed": true,
+      "error": null,
+      "checks": [
+        {
+          "event": 0,
+          "field": "outcome",
+          "expected": "session_opened",
+          "actual": "session_opened",
+          "passed": true
+        },
+        {
+          "event": 1,
+          "field": "outcome",
+          "expected": "applied",
+          "actual": "applied",
+          "passed": true
+        },
+        {
+          "event": 1,
+          "field": "device_level",
+          "expected": 50,
+          "actual": 50,
+          "passed": true
+        }
+      ],
+      "events": [
+        {
+          "frame": "  HELLO\t1\r",
+          "note": "",
+          "response": {
+            "outcome": "session_opened",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "0",
+            "device_level": 0,
+            "executions": "0",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "SET\t1  1 50\r",
+          "note": "",
+          "response": {
+            "outcome": "applied",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "1",
+            "device_level": 50,
+            "executions": "1",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        }
+      ]
+    },
+    {
+      "id": "sample_validation",
+      "title": "Invalid and duplicate telemetry",
+      "description": "Invalid or duplicate samples cannot make data fresh.",
+      "requirement": "R5",
+      "mode": "protected",
+      "passed": true,
+      "error": null,
+      "checks": [
+        {
+          "event": 1,
+          "field": "outcome",
+          "expected": "invalid_argument",
+          "actual": "invalid_argument",
+          "passed": true
+        },
+        {
+          "event": 1,
+          "field": "freshness",
+          "expected": "unknown",
+          "actual": "unknown",
+          "passed": true
+        },
+        {
+          "event": 2,
+          "field": "outcome",
+          "expected": "invalid_argument",
+          "actual": "invalid_argument",
+          "passed": true
+        },
+        {
+          "event": 2,
+          "field": "freshness",
+          "expected": "unknown",
+          "actual": "unknown",
+          "passed": true
+        },
+        {
+          "event": 3,
+          "field": "outcome",
+          "expected": "sample_accepted",
+          "actual": "sample_accepted",
+          "passed": true
+        },
+        {
+          "event": 5,
+          "field": "outcome",
+          "expected": "old_sample",
+          "actual": "old_sample",
+          "passed": true
+        },
+        {
+          "event": 6,
+          "field": "freshness",
+          "expected": "stale",
+          "actual": "stale",
+          "passed": true
+        }
+      ],
+      "events": [
+        {
+          "frame": "HELLO 1",
+          "note": "",
+          "response": {
+            "outcome": "session_opened",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "0",
+            "device_level": 0,
+            "executions": "0",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "SAMPLE 1 0 20",
+          "note": "",
+          "response": {
+            "outcome": "invalid_argument",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "0",
+            "device_level": 0,
+            "executions": "0",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "SAMPLE 1 1 101",
+          "note": "",
+          "response": {
+            "outcome": "invalid_argument",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "0",
+            "device_level": 0,
+            "executions": "0",
+            "freshness": "unknown",
+            "observed_level": null
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "SAMPLE 1 1 20",
+          "note": "",
+          "response": {
+            "outcome": "sample_accepted",
+            "time_ms": "0",
+            "session": "1",
+            "last_id": "0",
+            "device_level": 0,
+            "executions": "0",
+            "freshness": "fresh",
+            "observed_level": 20
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "CLOCK 900",
+          "note": "",
+          "response": {
+            "outcome": "clock_advanced",
+            "time_ms": "900",
+            "session": "1",
+            "last_id": "0",
+            "device_level": 0,
+            "executions": "0",
+            "freshness": "fresh",
+            "observed_level": 20
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "SAMPLE 1 1 20",
+          "note": "A duplicate sample cannot extend freshness.",
+          "response": {
+            "outcome": "old_sample",
+            "time_ms": "900",
+            "session": "1",
+            "last_id": "0",
+            "device_level": 0,
+            "executions": "0",
+            "freshness": "fresh",
+            "observed_level": 20
+          },
+          "delivery": "delivered"
+        },
+        {
+          "frame": "CLOCK 1000",
+          "note": "",
+          "response": {
+            "outcome": "clock_advanced",
+            "time_ms": "1000",
+            "session": "1",
+            "last_id": "0",
+            "device_level": 0,
+            "executions": "0",
+            "freshness": "stale",
+            "observed_level": 20
+          },
+          "delivery": "delivered"
+        }
+      ]
+    }
+  ]
+}

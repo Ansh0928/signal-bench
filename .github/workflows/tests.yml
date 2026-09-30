@@ -1,0 +1,22 @@
+name: Controller verification
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Compile and verify both implementations
+        run: make demo
+      - name: Check memory and undefined behaviour
+        run: |
+          c++ -std=c++17 -Wall -Wextra -Wpedantic -Werror -g -fsanitize=address,undefined -fno-omit-frame-pointer src/main.cpp -o build/controller-sanitized
+          python3 tests/run_tests.py --binary build/controller-sanitized --output build/sanitized-results.json
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: verification-evidence
+          path: |
+            reports/
+            build/sanitized-results.json

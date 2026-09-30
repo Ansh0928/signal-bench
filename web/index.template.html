@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="A reproducible C++ communication fault test bench with captured traces and verification evidence.">
+  <title>Signal Bench — Controller communication tests</title>
+  <style>__STYLES__</style>
+</head>
+<body>
+  <a class="skip" href="#experiment">Skip to experiment</a>
+  <header class="topbar">
+    <a class="brand" href="#"><svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="9" fill="#244cc5"/><path d="M6 17h5l3-8 4 15 3-7h5" stroke="white" stroke-width="2" fill="none" stroke-linejoin="round"/></svg><span>Signal Bench<small>Controller communication lab</small></span></a>
+    <div class="header-actions"><button id="export-json" class="quiet">Export evidence</button><button id="run" class="primary" disabled>Run tests</button></div>
+  </header>
+  <main>
+    <section class="intro" aria-labelledby="page-title">
+      <div><p class="context">C++17 / fault injection / software simulation</p><h1 id="page-title">What happens when<br>the connection breaks?</h1><p class="lede">Interrupt a command. Lose its reply. Reconnect.<br>Inspect the evidence that the controller behaves as intended.</p></div>
+      <div class="run-summary"><span id="suite-status" class="status"></span><p id="suite-description"></p><p id="run-date"></p><details><summary>About this test run</summary><p id="environment"></p><p>Simulated time is used for repeatable tests. No physical hardware, heart pump, or clinical behaviour is being tested.</p><p class="hash" id="hash"></p></details></div>
+    </section>
+    <p id="server-note" class="server-note" role="status">Opening saved test evidence…</p>
+    <div class="lab">
+      <aside aria-label="Test scenarios"><div class="nav-heading"><h2>Test scenarios</h2><span id="case-count"></span></div><p class="nav-hint">Choose a fault to investigate.</p><div id="scenarios" class="scenario-list"></div><div class="legend"><span class="dot red"></span> Fails in flawed mode<br><span class="dot green"></span> Passes in both modes</div></aside>
+      <section id="experiment" class="experiment" aria-labelledby="scenario-title" tabindex="-1">
+        <div class="case-heading"><span id="requirement" class="requirement"></span><h2 id="scenario-title"></h2><p id="scenario-description"></p></div>
+        <div class="comparison" role="group" aria-label="Implementation to inspect"><button id="mode-flawed" class="mode"><span>Flawed implementation</span><strong id="flawed-result"></strong><small>Two protections intentionally disabled</small></button><button id="mode-protected" class="mode"><span>Protected implementation</span><strong id="protected-result"></strong><small>Session and duplicate-command guards enabled</small></button></div>
+        <section class="trace-panel" aria-label="Recorded message trace">
+          <div class="trace-toolbar"><div><h3>Recorded exchange</h3><span id="step-count"></span></div><div class="playback"><button id="replay" class="quiet">Replay trace</button><button id="step" class="quiet">Next step</button><button id="show-all" class="quiet">Show all</button></div></div>
+          <div class="trace-columns" aria-hidden="true"><span>Test sender</span><span>Simulated link</span><span>C++ receiver / monitor</span></div>
+          <ol id="trace" class="trace"></ol>
+          <div id="device-state" class="device-state" aria-live="polite"></div>
+        </section>
+        <section class="checks-panel" aria-labelledby="checks-heading"><div class="checks-heading"><h3 id="checks-heading">Expected vs observed</h3><button id="export-csv" class="text-button">Download trace CSV</button></div><p class="checks-note">Assertions below describe the complete recorded run, including steps not yet revealed.</p><div class="table-wrap"><table><thead><tr><th>Step</th><th>Check</th><th>Expected</th><th>Observed</th><th>Result</th></tr></thead><tbody id="checks"></tbody></table></div></section>
+      </section>
+    </div>
+    <section class="research"><div><h2>Built around a documented failure class.</h2><p>Historical communication failures in cardiac-support systems motivated this independent educational project. These tests use an invented protocol and a virtual indicator, with no connection to a manufacturer’s equipment.</p></div><div class="source-links"><a href="https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfres/res.cfm?id=205152" target="_blank" rel="noreferrer">FDA: HeartMate Touch correction, 2024 <span>↗</span></a><a href="https://bivacor.com/careers/electrical-engineer-ii/" target="_blank" rel="noreferrer">BiVACOR: controller verification and test software <span>↗</span></a><p>No affiliation or endorsement. No claim of an unresolved BiVACOR defect.</p></div></section>
+  </main>
+  <footer>Signal Bench <span>Independent engineering portfolio project · Software simulation</span></footer>
+  <script id="evidence" type="application/json">__EVIDENCE__</script>
+  <script>__SCRIPT__</script>
+</body>
+</html>
