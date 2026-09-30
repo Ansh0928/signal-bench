@@ -16,7 +16,7 @@ Verified locally on 30 September 2026, macOS arm64, Apple Clang 17, Python 3.9.6
 | Mobile layout | Checked at 390 px; no page-width overflow |
 | Browser console | No errors or warnings observed during the tested flows |
 | Local runner origin check | Cross-origin POST rejected |
-| GitHub Actions | Workflow included; remote execution not yet verified |
+| GitHub Actions on Linux | Passed, including AddressSanitizer and UndefinedBehaviorSanitizer |
 | ESP32, RTOS, electrical interface, clinical operation | Not implemented or tested |
 
 `reports/results.json` is the machine-readable evidence for the normal build.
@@ -26,9 +26,9 @@ Verified locally on 30 September 2026, macOS arm64, Apple Clang 17, Python 3.9.6
 The AddressSanitizer startup failure was independently reproduced with a program
 containing only `int main() { return 0; }`. This isolates the observed startup
 problem from the controller logic; its environmental root cause is not established.
-The Linux CI workflow is configured to run AddressSanitizer and
-UndefinedBehaviorSanitizer once the repository is hosted, but that future run is
-not counted as a passed check.
+The Linux CI workflow subsequently passed both AddressSanitizer and
+UndefinedBehaviorSanitizer. See the [first successful hosted run](https://github.com/Ansh0928/signal-bench/actions/runs/36662016134).
+This establishes the Linux result; the local macOS startup limitation remains.
 
 The scenario count is not a coverage percentage or exhaustive safety claim. The
 failure scenarios are deterministic and bounded. Hardware timing, reboot
