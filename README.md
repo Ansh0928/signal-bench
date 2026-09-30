@@ -1,5 +1,7 @@
 # Signal Bench
 
+[Source repository](https://github.com/Ansh0928/signal-bench)
+
 **A controller communication test bench that makes interrupted-message failures reproducible.**
 
 An independent educational portfolio project for learning embedded C++, inspired
@@ -32,7 +34,18 @@ Open **http://127.0.0.1:8873** after `make serve`. Stop with Ctrl+C. If that por
 occupied, use `make serve PORT=8874`. The HTML file
 `reports/index.html` is self-contained and can also be opened offline or shared
 as an attachment. It contains captured evidence; replay animates that evidence.
-The **Run tests** button is available only when using the local server.
+The **Run tests** button is available only when using the local server. The
+hosted version provides **Run locally** instructions instead.
+
+## Hosted report
+
+Vercel publishes the interactive HTML report and downloadable JSON evidence as a
+static site. It does not run C++ in visitors' browsers or expose the local test
+runner. Replay reveals recorded results; timestamps identify the captured run.
+
+`npm run build` checks that the evidence passed and matches the current C++/test
+source hash, then generates `dist/`. Run `make demo` and commit the updated
+evidence when changing controller or test code. Deployment uses `vercel.ts`.
 
 ## What to demonstrate
 
@@ -92,7 +105,7 @@ flowchart LR
 - `docs/requirements.md`: requirements, protocol, and traceability.
 - `docs/research.md`: primary-source motivation and limits of the inference.
 - `docs/learning-guide.md`: beginner walkthrough and exercises.
-- `docs/application-kit.md`: resume wording, a demo script, and an unsent email draft.
+- `docs/validation.md`: verification record and known test limitations.
 
 ## Important design boundaries
 

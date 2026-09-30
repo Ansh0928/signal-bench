@@ -11,7 +11,7 @@
   <a class="skip" href="#experiment">Skip to experiment</a>
   <header class="topbar">
     <a class="brand" href="#"><svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="9" fill="#244cc5"/><path d="M6 17h5l3-8 4 15 3-7h5" stroke="white" stroke-width="2" fill="none" stroke-linejoin="round"/></svg><span>Signal Bench<small>Controller communication lab</small></span></a>
-    <div class="header-actions"><button id="export-json" class="quiet">Export evidence</button><button id="run" class="primary" disabled>Run tests</button></div>
+    <div class="header-actions"><a class="source-button" href="https://github.com/Ansh0928/signal-bench" target="_blank" rel="noreferrer">Source code</a><button id="export-json" class="quiet">Export evidence</button><button id="run" class="primary">Run locally</button></div>
   </header>
   <main>
     <section class="intro" aria-labelledby="page-title">
@@ -36,6 +36,9 @@
     <section class="research"><div><h2>Built around a documented failure class.</h2><p>Historical communication failures in cardiac-support systems motivated this independent educational project. These tests use an invented protocol and a virtual indicator, with no connection to a manufacturer’s equipment.</p></div><div class="source-links"><a href="https://www.accessdata.fda.gov/scripts/cdrh/cfdocs/cfres/res.cfm?id=205152" target="_blank" rel="noreferrer">FDA: HeartMate Touch correction, 2024 <span>↗</span></a><a href="https://bivacor.com/careers/electrical-engineer-ii/" target="_blank" rel="noreferrer">BiVACOR: controller verification and test software <span>↗</span></a><p>No affiliation or endorsement. No claim of an unresolved BiVACOR defect.</p></div></section>
   </main>
   <footer>Signal Bench <span>Independent engineering portfolio project · Software simulation</span></footer>
+  <dialog id="local-instructions" aria-labelledby="local-title"><h2 id="local-title">Run the C++ tests yourself</h2><p>This hosted report contains captured test evidence. To compile the controller and generate a fresh report, run these commands on your computer:</p><pre><code>git clone https://github.com/Ansh0928/signal-bench.git
+cd signal-bench
+make serve</code></pre><p>You need a C++17 compiler, Make, and Python 3.9+. Then open <strong>http://127.0.0.1:8873</strong>.</p><p><a href="https://github.com/Ansh0928/signal-bench#run-it" target="_blank" rel="noreferrer">Read the setup guide</a></p><form method="dialog"><button class="primary">Close</button></form></dialog>
   <script id="evidence" type="application/json">__EVIDENCE__</script>
   <script>__SCRIPT__</script>
 </body>

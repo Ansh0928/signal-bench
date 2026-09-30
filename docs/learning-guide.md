@@ -85,7 +85,7 @@ in this version, so do not list those as completed experience yet.
 
 ## Practise Git while learning
 
-The initial project is on the local branch `codex/signal-bench`. After completing
+The published project uses the `main` branch. After completing
 an exercise, inspect `git diff`, run `make demo`, and commit the specific files
 you changed with a message explaining the behaviour. Use `git log --oneline`
-to review that history. No public remote has been created by this setup.
+to review that history. The source repository is https://github.com/Ansh0928/signal-bench.

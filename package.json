@@ -1,0 +1,13 @@
+{
+  "name": "signal-bench",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "python3 tools.py publish",
+    "verify": "make demo"
+  },
+  "devDependencies": {
+    "@vercel/config": "0.7.2"
+  }
+}

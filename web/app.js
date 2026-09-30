@@ -4,6 +4,7 @@ let selected = "lost_ack";
 let mode = "flawed";
 let shown = Infinity;
 let timer = null;
+let localRunner = false;
 const $ = id => document.getElementById(id);
 const escapeHTML = value => String(value ?? "—").replace(/[&<>"']/g, char => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[char]));
 const current = () => evidence.results.find(result => result.id === selected && result.mode === mode);
@@ -89,6 +90,7 @@ $("export-csv").addEventListener("click", () => {
   download(`${selected}-${mode}.csv`, csv, "text/csv");
 });
 $("run").addEventListener("click", async () => {
+  if (!localRunner) { $("local-instructions").showModal(); return; }
   stopReplay(); $("run").disabled = true; $("run").textContent = "Running…";
   $("server-note").textContent = "Compiling C++ and executing the scenarios locally…";
   try {
@@ -102,12 +104,14 @@ $("run").addEventListener("click", async () => {
 });
 renderSummary(); renderCase();
 async function checkServer() {
-  $("server-note").textContent = "Saved report. Use make serve in the project folder to run tests from this page.";
-  if (!/^https?:$/.test(location.protocol)) return;
+  $("server-note").textContent = "Recorded test evidence. Replay the results below, or choose Run locally to execute the C++ suite yourself.";
+  if (!/^https?:$/.test(location.protocol) || !["localhost", "127.0.0.1"].includes(location.hostname)) return;
   try {
     const response = await fetch("/api/status");
     if (response.ok && (await response.json()).runner === "signal-bench") {
+      localRunner = true;
       $("run").disabled = false;
+      $("run").textContent = "Run tests";
       $("server-note").textContent = "Local runner connected. Run tests to compile the controller and capture fresh evidence.";
     }
   } catch (_) { /* The portable report works without a server. */ }

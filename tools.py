@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 """Generate a portable report, or serve it with a loopback-only test runner."""
 import argparse
+import hashlib
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import json
 from pathlib import Path
 import subprocess
+import shutil
 import sys
 from urllib.parse import urlsplit
 
@@ -23,6 +25,26 @@ def build_report():
         html = html.replace(key, value)
     (ROOT / "reports/index.html").write_text(html)
     return evidence
+
+
+def publish_report():
+    # Refuse to publish a passing snapshot if its tested source has since changed.
+    evidence = json.loads((ROOT / "reports/results.json").read_text())
+    digest = hashlib.sha256()
+    for folder in ("src", "tests"):
+        for path in sorted((ROOT / folder).glob("*")):
+            if path.is_file() and path.suffix in (".cpp", ".hpp", ".py"):
+                digest.update(str(path.relative_to(ROOT)).encode())
+                digest.update(path.read_bytes())
+    if not evidence.get("verification_passed") or evidence.get("source_sha256") != digest.hexdigest():
+        raise SystemExit("Evidence is failing or stale. Run make demo before publishing.")
+    build_report()
+    output = ROOT / "dist"
+    output.mkdir(exist_ok=True)
+    # Only these explicit public artifacts are published, never the local runner.
+    for filename in ("index.html", "results.json"):
+        shutil.copyfile(ROOT / "reports" / filename, output / filename)
+    print("Published report assembled in dist/ from verified, source-matched evidence.")
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -94,9 +116,12 @@ class Handler(BaseHTTPRequestHandler):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("action", choices=("report", "serve"))
+    parser.add_argument("action", choices=("report", "serve", "publish"))
     parser.add_argument("--port", type=int, default=8873)
     args = parser.parse_args()
+    if args.action == "publish":
+        publish_report()
+        return
     build_report()
     if args.action == "report":
         print("Portable report: " + str(ROOT / "reports/index.html"))
